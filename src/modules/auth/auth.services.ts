@@ -26,7 +26,10 @@ const signup = async (req: Request) => {
         // Check if a user with the same email already exists
         const isUserExist = await User.findOne({ email });
         if (isUserExist) {
-            throw new ApiError(StatusCodes.CONFLICT, "User already exists");
+            throw new ApiError(
+                StatusCodes.CONFLICT,
+                "User already exists. Please try with another email."
+            );
         }
 
         // Hash the user's password before storing it in the database
@@ -38,6 +41,14 @@ const signup = async (req: Request) => {
             email,
             password: hashPassword,
         });
+
+        // Check if User was actually created
+        if (!result) {
+            throw new ApiError(
+                StatusCodes.INTERNAL_SERVER_ERROR,
+                "Something went wrong!"
+            );
+        }
 
         // Convert to plain object and remove sensitive fields
         const userObj: Partial<typeof result> = result.toObject();
@@ -79,8 +90,6 @@ const login = async (req: Request) => {
             .select("+password")
             .lean()
             .exec();
-
-        console.log("userWithPassword:", userWithPassword);
 
         if (!userWithPassword) {
             throw new ApiError(

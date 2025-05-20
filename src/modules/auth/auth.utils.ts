@@ -16,7 +16,6 @@ export const hashedPassword = async (password: string): Promise<string> => {
     }
 };
 
-
 // Function to compare plain text password with hashed password
 export const comparePasswords = async (
     plainTextPassword: string,
@@ -34,9 +33,9 @@ export const comparePasswords = async (
 };
 
 interface CustomJwtPayload extends JwtPayload {
-  id?: string | null;
-  email?: string |null ;
-  role?: string | null;
+    id?: string | null;
+    email?: string | null;
+    role?: string | null;
 }
 type UnitAnyCase = "s" | "m" | "h" | "d";
 
@@ -72,7 +71,10 @@ export const verifyToken = (token: string): CustomJwtPayload => {
         throw new Error("JWT secret is not defined in config");
     }
     try {
-        return jwt.verify(token, config.jwt.secret as Secret) as CustomJwtPayload;
+        return jwt.verify(
+            token,
+            config.jwt.secret as Secret
+        ) as CustomJwtPayload;
     } catch (error) {
         throw new Error("Invalid or expired token");
     }

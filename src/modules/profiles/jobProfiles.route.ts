@@ -16,9 +16,9 @@ router.get("/:profileId", ProfileController.getSingleProfile);
 router.patch("/:profileId", ProfileController.updateProfile);
 
 // Delete single user by ID
-// router.delete("/:userId", UserController.deleteSingleUser);
+router.delete("/:profileId", ProfileController.deleteSingleProfile);
 
-// // Delete multiple users
-// router.delete("", UserController.deleteMultipleUsers);
+// Delete multiple users
+router.delete("", ProfileController.deleteMultipleProfiles);
 
 export const Profiles: Router = router;

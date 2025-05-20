@@ -66,9 +66,9 @@ const updateProfile = asyncErrorHandler(async (req: Request, res: Response) => {
 
 
 // Controller function fo delete single user by UserID
-const deleteSingleUser = asyncErrorHandler(
+const deleteSingleProfile = asyncErrorHandler(
     async (req: Request, res: Response) => {
-        const result = await ProfileServices.deleteSingleUser(req);
+        const result = await ProfileServices.deleteSingleProfile(req);
         ApiResponse(res, {
             statusCode: StatusCodes.OK,
             success: true,
@@ -78,9 +78,9 @@ const deleteSingleUser = asyncErrorHandler(
 );
 
 // Controller function fo delete mulyiple user
-const deleteMultipleUsers = asyncErrorHandler(
+const deleteMultipleProfiles = asyncErrorHandler(
     async (req: Request, res: Response) => {
-        const result = await ProfileServices.deleteMultipleUsers(req);
+        const result = await ProfileServices.deleteMultipleProfiles(req);
         ApiResponse(res, {
             statusCode: StatusCodes.OK,
             success: true,
@@ -94,6 +94,6 @@ export const ProfileController = {
     getAllProfile,
     getSingleProfile,
     updateProfile,
-    deleteSingleUser,
-    deleteMultipleUsers,
+    deleteSingleProfile,
+    deleteMultipleProfiles,
 };

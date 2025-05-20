@@ -171,22 +171,33 @@ const updateProfile = async (req: Request) => {
         const { profileId } = req.params;
 
         if (!profileId) {
-            throw new ApiError(StatusCodes.BAD_REQUEST, "Profile ID is required");
+            throw new ApiError(
+                StatusCodes.BAD_REQUEST,
+                "Profile ID is required"
+            );
         }
 
         if (!mongoose.Types.ObjectId.isValid(profileId)) {
-            throw new ApiError(StatusCodes.BAD_REQUEST, "Invalid profile ID format");
+            throw new ApiError(
+                StatusCodes.BAD_REQUEST,
+                "Invalid profile ID format"
+            );
         }
 
         // Prevent userId update
         if ("userId" in req.body) {
-            throw new ApiError(StatusCodes.BAD_REQUEST, "You cannot update userId");
+            throw new ApiError(
+                StatusCodes.BAD_REQUEST,
+                "You cannot update userId"
+            );
         }
 
         // Validate request body against update schema
         const parseBody = updateProfileSchema.safeParse(req.body);
         if (!parseBody.success) {
-            const errorMessages = parseBody.error.errors.map(e => e.message).join(", ");
+            const errorMessages = parseBody.error.errors
+                .map((e) => e.message)
+                .join(", ");
             throw new ApiError(StatusCodes.BAD_REQUEST, errorMessages);
         }
 
@@ -215,104 +226,39 @@ const updateProfile = async (req: Request) => {
     }
 };
 
-
-
-
-
-
-
-
-
-
-// Function to get all user with filters and pagination
-const getAllUser = async (
-    filters: any,
-    options: IPaginationOptions,
-    authUser: IAuthUser
-): Promise<IGenericResponse<InstanceType<typeof User>[]>> => {
+// Function to Delete single Profile by profileId
+const deleteSingleProfile = async (req: Request) => {
     try {
-        const { limit, page, skip } =
-            paginationHelpers.calculatePagination(options);
+        const { profileId } = req.params;
 
-        // Only allow filtering by these keys
-        const allowedFilterKeys = ["firstName", "lastName", "phone", "email"];
-        const andConditions: FilterQuery<typeof User>[] = [];
-
-        Object.keys(filters).forEach((key) => {
-            if (allowedFilterKeys.includes(key)) {
-                // Case-insensitive partial match for string fields
-                andConditions.push({
-                    [key]: { $regex: filters[key], $options: "i" },
-                });
-            }
-        });
-
-        // Combine all conditions
-        const whereConditions =
-            andConditions.length > 0 ? { $and: andConditions } : {};
-
-        // Query the database
-        const result = await User.find(whereConditions)
-            .skip(skip)
-            .limit(limit)
-            .sort(
-                options.sortBy && options.sortOrder
-                    ? { [options.sortBy]: options.sortOrder === "asc" ? 1 : -1 }
-                    : { createdAt: 1 }
-            )
-            .exec();
-
-        const total = await User.countDocuments(whereConditions);
-
-        return {
-            meta: {
-                total,
-                page,
-                limit,
-            },
-            data: result,
-        };
-    } catch (error) {
-        if (error instanceof ApiError) throw error;
-        throw new ApiError(
-            StatusCodes.INTERNAL_SERVER_ERROR,
-            `An unexpected error occurred while getting all User:${
-                error instanceof Error ? error.message : "Unknown error"
-            }`
-        );
-    }
-};
-
-// Function to Delete single user by UserID
-const deleteSingleUser = async (req: Request) => {
-    try {
-        const { userId } = req.params;
-
-        if (!userId) {
-            throw new ApiError(StatusCodes.BAD_REQUEST, "User ID is required");
-        }
-
-        // Validate userId format if using MongoDB
-        if (!mongoose.Types.ObjectId.isValid(userId)) {
+        if (!profileId) {
             throw new ApiError(
                 StatusCodes.BAD_REQUEST,
-                "Invalid User ID or format"
+                "Profile ID is required"
             );
         }
 
-        const user = await User.findById(userId);
-        if (!user) {
-            throw new ApiError(StatusCodes.NOT_FOUND, "User not found");
+        // Validate profileId format if using MongoDB
+        if (!mongoose.Types.ObjectId.isValid(profileId)) {
+            throw new ApiError(
+                StatusCodes.BAD_REQUEST,
+                "Invalid Profile ID or format"
+            );
         }
 
-        await User.findByIdAndDelete(userId);
+        const profile = await Profile.findById(profileId);
+        if (!profile) {
+            throw new ApiError(StatusCodes.NOT_FOUND, "Profile not found");
+        }
 
-        return { message: "User deleted successfully" };
+        await Profile.findByIdAndDelete(profileId);
+
+        return { message: "Profile deleted successfully" };
     } catch (error) {
         if (error instanceof ApiError) throw error;
         throw new ApiError(
             StatusCodes.INTERNAL_SERVER_ERROR,
-            `An unexpected error occurred while deleting the user:${
+            `An unexpected error occurred while deleting the Profile:${
                 error instanceof Error ? error.message : "Unknown error"
             }`
         );
@@ -320,7 +266,7 @@ const deleteSingleUser = async (req: Request) => {
 };
 
 // Function for delete Multiple users
-const deleteMultipleUsers = async (req: Request) => {
+const deleteMultipleProfiles = async (req: Request) => {
     try {
         const { ids } = req.body;
 
@@ -338,36 +284,36 @@ const deleteMultipleUsers = async (req: Request) => {
         if (invalidIds.length > 0) {
             throw new ApiError(
                 StatusCodes.BAD_REQUEST,
-                `Invalid User Id(s): ${invalidIds.join(", ")}`
+                `Invalid Profile Id(s): ${invalidIds.join(", ")}`
             );
         }
 
-        // Fetch all users to ensure they exist
-        const existingUsers = await User.find({ _id: { $in: ids } });
-        if (existingUsers.length !== ids.length) {
+        // Fetch all Profile to ensure they exist
+        const existingProfile = await Profile.find({ _id: { $in: ids } });
+        if (existingProfile.length !== ids.length) {
             throw new ApiError(
                 StatusCodes.NOT_FOUND,
-                "One or more user IDs do not exist"
+                "Given Profile IDs do not exist"
             );
         }
 
-        // Delete users from database
-        const result = await User.deleteMany({ _id: { $in: ids } });
+        // Delete Profile from database
+        const result = await Profile.deleteMany({ _id: { $in: ids } });
         if (result.deletedCount !== ids.length) {
             throw new ApiError(
                 StatusCodes.INTERNAL_SERVER_ERROR,
-                "Some users could not be deleted"
+                "Some Profile could not be deleted"
             );
         }
 
         return {
-            message: `${result.deletedCount} users deleted successfully`,
+            message: `${result.deletedCount} Profile deleted successfully`,
         };
     } catch (error) {
         if (error instanceof ApiError) throw error;
         throw new ApiError(
             StatusCodes.INTERNAL_SERVER_ERROR,
-            `An unexpected error occurred while deleting the users:${
+            `An unexpected error occurred while deleting Profiles:${
                 error instanceof Error ? error.message : "Unknown error"
             }`
         );
@@ -379,7 +325,6 @@ export const ProfileServices = {
     getAllProfile,
     getSingleProfile,
     updateProfile,
-    getAllUser,
-    deleteSingleUser,
-    deleteMultipleUsers,
+    deleteSingleProfile,
+    deleteMultipleProfiles,
 };
